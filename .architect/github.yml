@@ -1,7 +1,7 @@
 github:
-  pipeline:
-    name: github-architected-pipeline
-    type: github/classic-java-17
+  pipelines:
+    - name: github-architected-pipeline
+      type: github/classic-java-17
   deps:
     type: renovate
   release:
