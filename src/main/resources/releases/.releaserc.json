@@ -1,0 +1,27 @@
+{
+  "branches": ["main"],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/changelog",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "./update-version.sh ${nextRelease.version}"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": {{assets}}
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": {{git_assets}},
+        "message": {{message}}
+      }
+    ]
+  ]
+}
