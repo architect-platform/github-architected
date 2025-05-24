@@ -17,7 +17,7 @@ import kotlin.io.path.Path
 
 class GithubPlugin : ArchitectPlugin<GithubContext> {
 	override val id = "github-plugin"
-	override val contextKey: String = "pipelines"
+	override val contextKey: String = "github"
 
 	@Suppress("UNCHECKED_CAST")
 	override val ctxClass = GithubContext::class.java
@@ -57,7 +57,7 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 			return TaskResult.success("Dependencies initialization skipped.")
 		}
 		val resourceExtractor = projectContext.service(ResourceExtractor::class.java)
-		resourceExtractor.copyDirectoryFromResources("dependencies/${context.deps.type}", Path(projectContext.dir.toString(), ".github/"))
+		resourceExtractor.copyDirectoryFromResources(this.javaClass.classLoader, "dependencies/${context.deps.type}", Path(projectContext.dir.toString(), ".github/"))
 		return TaskResult.success("Dependencies initialized successfully.")
 	}
 
@@ -78,10 +78,10 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 		val resourceExtractor = projectContext.service(ResourceExtractor::class.java)
 		val commandExecutor = projectContext.service(CommandExecutor::class.java)
 
-		resourceExtractor.copyFileFromResources("releases/run.sh", projectContext.dir, "run.sh")
-		resourceExtractor.copyFileFromResources("releases/update-version.sh", projectContext.dir, "update-version.sh")
+		resourceExtractor.copyFileFromResources(this.javaClass.classLoader, "releases/run.sh", projectContext.dir, "run.sh")
+		resourceExtractor.copyFileFromResources(this.javaClass.classLoader, "releases/update-version.sh", projectContext.dir, "update-version.sh")
 		commandExecutor.execute("chmod +x update-version.sh", projectContext.dir.toString())
-		resourceExtractor.getResourceFileContent("releases/.releaserc.json")
+		resourceExtractor.getResourceFileContent(this.javaClass.classLoader, "releases/.releaserc.json")
 			.replace("{{message}}", message)
 			.replace("{{assets}}", assetsJson)
 			.replace("{{git_assets}}", gitAssetsjson)
@@ -121,7 +121,7 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 		}
 
 		val resourceExtractor = projectContext.service(ResourceExtractor::class.java)
-		resourceExtractor.getResourceFileContent(resourceFile)
+		resourceExtractor.getResourceFileContent(this.javaClass.classLoader, resourceFile)
 			.let { content ->
 				val filePath = File(pipelinesDir, "${pipeline.name}.yml")
 				filePath.writeText(
