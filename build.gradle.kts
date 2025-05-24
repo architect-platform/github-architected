@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-	implementation("io.github.architectplatform:architect-api:1.13.0")
+	implementation("io.github.architectplatform:architect-api:1.14.0")
 	implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0") // core Jackson
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0") // Kotlin support
 
