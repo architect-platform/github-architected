@@ -1,3 +1,0 @@
-pipeline:
-  name: github-architected-pipeline
-  type: github/classic-java-17
