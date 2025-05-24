@@ -1,5 +1,5 @@
 project:
-  name: gradle-architected
-  description: "The Architect plugin for Gradle"
+  name: github-architected
+  description: "The Architect plugin for Github"
 
 
