@@ -7,5 +7,5 @@ deps:
 
 release:
   assets:
-    - name: gradle-architected.jar
-      path: "build/libs/gradle-architected-*.jar"
+    - name: github-architected.jar
+      path: "build/libs/github-architected-*.jar"
