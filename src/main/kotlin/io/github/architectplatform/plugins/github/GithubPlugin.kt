@@ -10,12 +10,14 @@ import io.github.architectplatform.api.tasks.TaskRegistry
 import io.github.architectplatform.api.tasks.TaskResult
 import io.github.architectplatform.api.workflows.core.CoreWorkflow
 import io.github.architectplatform.plugins.github.dto.GithubContext
+import io.github.architectplatform.plugins.github.dto.PipelineContext
+import java.io.File
 import java.nio.file.Files
 import kotlin.io.path.Path
 
 class GithubPlugin : ArchitectPlugin<GithubContext> {
 	override val id = "github-plugin"
-	override val contextKey: String = "github"
+	override val contextKey: String = "pipelines"
 
 	@Suppress("UNCHECKED_CAST")
 	override val ctxClass = GithubContext::class.java
@@ -28,6 +30,14 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 				id = "github-release-task",
 				phase = CoreWorkflow.RELEASE,
 				task = ::releaseTask,
+			)
+		)
+
+		registry.add(
+			SimpleTask(
+				id = "github-init-pipelines",
+				phase = CoreWorkflow.INIT,
+				task = ::initPipelines,
 			)
 		)
 	}
@@ -62,6 +72,40 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 		commandExecutor.execute("rm update-version.sh")
 		commandExecutor.execute("rm .releaserc.json")
 		return TaskResult.success("Release completed successfully")
+	}
+
+	private fun initPipelines(projectContext: ProjectContext): TaskResult {
+		val results = this.context.pipelines.map { pipeline ->
+			println("Initializing pipeline: ${pipeline.name} of type ${pipeline.type}")
+			return initSinglePipeline(pipeline, projectContext)
+		}
+		return TaskResult.success("All pipelines initialized successfully.", results)
+	}
+
+	private fun initSinglePipeline(
+		pipeline: PipelineContext,
+		projectContext: ProjectContext,
+	): TaskResult {
+		val resourceRoot = "pipelines/"
+		val resourceFile = resourceRoot + pipeline.type + ".yml"
+		val pipelinesDir = File(
+			projectContext.dir.toString(),
+			".github/workflows"
+		)
+
+		if (!pipelinesDir.exists()) {
+			pipelinesDir.mkdirs()
+		}
+		val resourceExtractor = projectContext.service(ResourceExtractor::class.java)
+		resourceExtractor.getResourceFileContent(resourceFile)
+			.let { content ->
+				val filePath = File(pipelinesDir, "${pipeline.name}.yml")
+				filePath.writeText(
+					content
+						.replace("{{name}}", pipeline.name)
+				)
+			}
+		return TaskResult.success("Pipeline ${pipeline.name} initialized successfully.")
 	}
 
 }
