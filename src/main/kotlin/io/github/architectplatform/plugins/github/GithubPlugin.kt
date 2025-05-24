@@ -40,11 +40,34 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 				task = ::initPipelines,
 			)
 		)
+
+		registry.add(
+			SimpleTask(
+				id = "github-init-dependencies",
+				phase = CoreWorkflow.INIT,
+				task = ::initDependencies,
+			)
+		)
+	}
+
+	private fun initDependencies(projectContext: ProjectContext): TaskResult {
+		println("Github Releaser: initializing dependencies")
+		if (context.deps.enabled.not()) {
+			println("Github Releaser: dependencies are not enabled, skipping initialization.")
+			return TaskResult.success("Dependencies initialization skipped.")
+		}
+		val resourceExtractor = projectContext.service(ResourceExtractor::class.java)
+		resourceExtractor.copyDirectoryFromResources("dependencies/${context.deps.type}", Path(projectContext.dir.toString(), ".github/"))
+		return TaskResult.success("Dependencies initialized successfully.")
 	}
 
 	private fun releaseTask(projectContext: ProjectContext): TaskResult {
 		println("Github Releaser: releasing the application")
 		println("Release context: $context")
+		if (context.release.enabled.not()) {
+			println("Github Releaser: release is not enabled, skipping.")
+			return TaskResult.success("Release skipped as it is not enabled.")
+		}
 		val objectMapper = ObjectMapper()
 		val standardGitAssets = listOf("**/*.gradle", "**/*.gradle.kts")
 		val message = objectMapper.writeValueAsString(context.release.message)
@@ -55,22 +78,22 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 		val resourceExtractor = projectContext.service(ResourceExtractor::class.java)
 		val commandExecutor = projectContext.service(CommandExecutor::class.java)
 
-		resourceExtractor.copyFileFromResources("releases/run.sh", Path(""), "run.sh")
-		resourceExtractor.copyFileFromResources("releases/update-version.sh", Path(""), "update-version.sh")
-		commandExecutor.execute("chmod +x update-version.sh")
+		resourceExtractor.copyFileFromResources("releases/run.sh", projectContext.dir, "run.sh")
+		resourceExtractor.copyFileFromResources("releases/update-version.sh", projectContext.dir, "update-version.sh")
+		commandExecutor.execute("chmod +x update-version.sh", projectContext.dir.toString())
 		resourceExtractor.getResourceFileContent("releases/.releaserc.json")
 			.replace("{{message}}", message)
 			.replace("{{assets}}", assetsJson)
 			.replace("{{git_assets}}", gitAssetsjson)
 			.let { result ->
-				Files.write(Path(".releaserc.json"), result.toByteArray())
+				Files.write(Path(projectContext.dir.toString(),".releaserc.json"), result.toByteArray())
 			}
 
-		commandExecutor.execute("./run.sh")
+		commandExecutor.execute("./run.sh", projectContext.dir.toString())
 
-		commandExecutor.execute("rm run.sh")
-		commandExecutor.execute("rm update-version.sh")
-		commandExecutor.execute("rm .releaserc.json")
+		commandExecutor.execute("rm run.sh", projectContext.dir.toString())
+		commandExecutor.execute("rm update-version.sh", projectContext.dir.toString())
+		commandExecutor.execute("rm .releaserc.json", projectContext.dir.toString())
 		return TaskResult.success("Release completed successfully")
 	}
 
@@ -96,6 +119,7 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 		if (!pipelinesDir.exists()) {
 			pipelinesDir.mkdirs()
 		}
+
 		val resourceExtractor = projectContext.service(ResourceExtractor::class.java)
 		resourceExtractor.getResourceFileContent(resourceFile)
 			.let { content ->
