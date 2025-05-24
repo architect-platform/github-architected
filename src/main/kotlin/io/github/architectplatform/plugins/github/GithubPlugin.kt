@@ -19,9 +19,8 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 	override val id = "github-plugin"
 	override val contextKey: String = "github"
 
-	@Suppress("UNCHECKED_CAST")
 	override val ctxClass = GithubContext::class.java
-	override lateinit var context: GithubContext
+	override var context: GithubContext = GithubContext()
 
 	override fun register(registry: TaskRegistry) {
 		println("Registering GradlePlugin with ID: $id")
