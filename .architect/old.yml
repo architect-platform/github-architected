@@ -4,3 +4,8 @@ pipeline:
 
 deps:
   type: renovate
+
+release:
+  assets:
+    - name: gradle-architected.jar
+      path: "build/libs/gradle-architected-*.jar"
