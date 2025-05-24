@@ -1,0 +1,5 @@
+project:
+  name: gradle-architected
+  description: "The Architect plugin for Gradle"
+
+
