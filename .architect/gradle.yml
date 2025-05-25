@@ -1,5 +1,5 @@
 gradle:
   projects:
     - name: github-architected
-      path: .
+      path: app
       githubPackageRelease: true

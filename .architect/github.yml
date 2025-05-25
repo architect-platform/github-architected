@@ -7,4 +7,4 @@ github:
   release:
     assets:
       - name: github-architected.jar
-        path: "build/libs/github-architected-*.jar"
+        path: "app/build/libs/github-architected-*.jar"
