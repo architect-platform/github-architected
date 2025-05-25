@@ -42,7 +42,7 @@ jobs:
 
       - name: Set up Architect Engine
         run: |
-          architect engine install
+          architect engine install-ci
           architect engine start
 
       - name: Init
