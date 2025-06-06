@@ -1,4 +1,4 @@
-plugins { kotlin("jvm") version "1.9.25" }
+plugins { kotlin("jvm") version "2.1.21" }
 
 group = "io.github.architectplatform.plugins"
 
