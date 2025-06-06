@@ -9,6 +9,7 @@ import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.impl.SimpleTask
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
+import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.plugins.github.dto.GithubContext
 import io.github.architectplatform.plugins.github.dto.PipelineContext
 import java.io.File
@@ -23,7 +24,7 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 	override var context: GithubContext = GithubContext()
 
 	override fun register(registry: TaskRegistry) {
-		println("Registering GradlePlugin with ID: $id")
+		println("Registering GithubPlugin with ID: $id")
 		registry.add(
 			SimpleTask(
 				id = "github-release-task",
@@ -49,18 +50,18 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 		)
 	}
 
-	private fun initDependencies(projectContext: ProjectContext): TaskResult {
+	private fun initDependencies(environment: Environment, projectContext: ProjectContext): TaskResult {
 		println("Github Releaser: initializing dependencies")
 		if (context.deps.enabled.not()) {
 			println("Github Releaser: dependencies are not enabled, skipping initialization.")
 			return TaskResult.success("Dependencies initialization skipped.")
 		}
-		val resourceExtractor = projectContext.service(ResourceExtractor::class.java)
+		val resourceExtractor = environment.service(ResourceExtractor::class.java)
 		resourceExtractor.copyDirectoryFromResources(this.javaClass.classLoader, "dependencies/${context.deps.type}", Path(projectContext.dir.toString(), ".github/"))
 		return TaskResult.success("Dependencies initialized successfully.")
 	}
 
-	private fun releaseTask(projectContext: ProjectContext): TaskResult {
+	private fun releaseTask(environment: Environment, projectContext: ProjectContext): TaskResult {
 		println("Github Releaser: releasing the application")
 		println("Release context: $context")
 		if (context.release.enabled.not()) {
@@ -74,8 +75,8 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 		val allGitAssets = standardGitAssets + context.release.git_assets
 		val gitAssetsjson = objectMapper.writeValueAsString(allGitAssets)
 
-		val resourceExtractor = projectContext.service(ResourceExtractor::class.java)
-		val commandExecutor = projectContext.service(CommandExecutor::class.java)
+		val resourceExtractor = environment.service(ResourceExtractor::class.java)
+		val commandExecutor = environment.service(CommandExecutor::class.java)
 
 		resourceExtractor.copyFileFromResources(this.javaClass.classLoader, "releases/run.sh", projectContext.dir, "run.sh")
 		resourceExtractor.copyFileFromResources(this.javaClass.classLoader, "releases/update-version.sh", projectContext.dir, "update-version.sh")
@@ -96,16 +97,17 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 		return TaskResult.success("Release completed successfully")
 	}
 
-	private fun initPipelines(projectContext: ProjectContext): TaskResult {
+	private fun initPipelines(environment: Environment, projectContext: ProjectContext): TaskResult {
 		val results = this.context.pipelines.map { pipeline ->
 			println("Initializing pipeline: ${pipeline.name} of type ${pipeline.type}")
-			return initSinglePipeline(pipeline, projectContext)
+			return initSinglePipeline(pipeline, environment, projectContext)
 		}
 		return TaskResult.success("All pipelines initialized successfully.", results)
 	}
 
 	private fun initSinglePipeline(
 		pipeline: PipelineContext,
+		environment: Environment,
 		projectContext: ProjectContext,
 	): TaskResult {
 		val resourceRoot = "pipelines/"
@@ -119,7 +121,7 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 			pipelinesDir.mkdirs()
 		}
 
-		val resourceExtractor = projectContext.service(ResourceExtractor::class.java)
+		val resourceExtractor = environment.service(ResourceExtractor::class.java)
 		resourceExtractor.getResourceFileContent(this.javaClass.classLoader, resourceFile)
 			.let { content ->
 				val filePath = File(pipelinesDir, "${pipeline.name}.yml")

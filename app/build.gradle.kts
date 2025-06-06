@@ -16,20 +16,18 @@ kotlin {
 
 repositories {
 	mavenCentral()
-	repositories {
-		maven {
-			name = "GitHubPackages"
-			url = uri("https://maven.pkg.github.com/architect-platform/architect-api")
-			credentials {
-				username = System.getenv("GITHUB_USER") ?: project.findProperty("githubUser") as String? ?: "github-actions"
-				password = System.getenv("REGISTRY_TOKEN") ?: System.getenv("GITHUB_TOKEN") ?: project.findProperty("githubToken") as String?
-			}
+	maven {
+		name = "GitHubPackages"
+		url = uri("https://maven.pkg.github.com/architect-platform/architect-api")
+		credentials {
+			username = System.getenv("GITHUB_USER") ?: project.findProperty("githubUser") as String? ?: "github-actions"
+			password = System.getenv("REGISTRY_TOKEN") ?: System.getenv("GITHUB_TOKEN") ?: project.findProperty("githubToken") as String?
 		}
 	}
 }
 
 dependencies {
-	implementation("io.github.architectplatform:architect-api:1.14.0")
+	implementation("io.github.architectplatform:architect-api:1.16.0")
 	implementation("com.fasterxml.jackson.core:jackson-databind:2.19.0") // core Jackson
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.0") // Kotlin support
 }
