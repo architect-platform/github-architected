@@ -1,5 +1,7 @@
 {
-  "branches": ["main"],
+  "branches": [
+    "main"
+  ],
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
@@ -13,15 +15,29 @@
     [
       "@semantic-release/github",
       {
-        "assets": {{assets}}
+        "assets": {
+      {
+        assets
       }
+    }
+    }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": {{git_assets}},
-        "message": {{message}}
+        "assets": {
+      {
+        git_assets
       }
+    },
+      "message"
+      :
+      {
+      {
+        message
+      }
+    }
+    }
     ]
   ]
 }
