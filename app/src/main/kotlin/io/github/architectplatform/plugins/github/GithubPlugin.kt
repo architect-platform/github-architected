@@ -24,7 +24,7 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
   override var context: GithubContext = GithubContext()
 
   override fun register(registry: TaskRegistry) {
-    println("Registering GithubPlugin with ID: $id")
+    println("Registering Github Plugin")
     registry.add(
         SimpleTask(
             id = "github-release-task",
@@ -51,9 +51,7 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
       environment: Environment,
       projectContext: ProjectContext
   ): TaskResult {
-    println("Github Releaser: initializing dependencies")
     if (context.deps.enabled.not()) {
-      println("Github Releaser: dependencies are not enabled, skipping initialization.")
       return TaskResult.success("Dependencies initialization skipped.")
     }
     val resourceExtractor = environment.service(ResourceExtractor::class.java)
@@ -65,10 +63,7 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
   }
 
   private fun releaseTask(environment: Environment, projectContext: ProjectContext): TaskResult {
-    println("Github Releaser: releasing the application")
-    println("Release context: $context")
     if (context.release.enabled.not()) {
-      println("Github Releaser: release is not enabled, skipping.")
       return TaskResult.success("Release skipped as it is not enabled.")
     }
     val objectMapper = ObjectMapper()
@@ -109,7 +104,6 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
   private fun initPipelines(environment: Environment, projectContext: ProjectContext): TaskResult {
     val results =
         this.context.pipelines.map { pipeline ->
-          println("Initializing pipeline: ${pipeline.name} of type ${pipeline.type}")
           return initSinglePipeline(pipeline, environment, projectContext)
         }
     return TaskResult.success("All pipelines initialized successfully.", results)
