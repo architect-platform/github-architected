@@ -7,9 +7,10 @@ import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
+import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.api.core.tasks.impl.SimpleTask
+import io.github.architectplatform.api.core.tasks.phase.Phase
 import io.github.architectplatform.plugins.github.dto.GithubContext
 import io.github.architectplatform.plugins.github.dto.PipelineContext
 import java.io.File
@@ -26,25 +27,47 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
   override fun register(registry: TaskRegistry) {
     println("Registering Github Plugin")
     registry.add(
-        SimpleTask(
+        GithubTask(
             id = "github-release-task",
             phase = CoreWorkflow.RELEASE,
             task = ::releaseTask,
         ))
 
     registry.add(
-        SimpleTask(
+        GithubTask(
             id = "github-init-pipelines",
             phase = CoreWorkflow.INIT,
             task = ::initPipelines,
         ))
 
     registry.add(
-        SimpleTask(
+        GithubTask(
             id = "github-init-dependencies",
             phase = CoreWorkflow.INIT,
             task = ::initDependencies,
         ))
+  }
+
+  class GithubTask(
+      override val id: String,
+      private val phase: Phase,
+      private val task: (Environment, ProjectContext) -> TaskResult
+  ) : Task {
+
+    override fun phase(): Phase = phase
+
+    override fun execute(
+        environment: Environment,
+        projectContext: ProjectContext,
+        args: List<String>
+    ): TaskResult {
+      return try {
+        task(environment, projectContext)
+      } catch (e: Exception) {
+        TaskResult.failure(
+            "Github task: $id failed with exception: ${e.message ?: "Unknown error"}")
+      }
+    }
   }
 
   private fun initDependencies(
