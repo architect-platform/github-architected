@@ -25,7 +25,6 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
   override var context: GithubContext = GithubContext()
 
   override fun register(registry: TaskRegistry) {
-    println("Registering Github Plugin")
     registry.add(
         GithubTask(
             id = "github-release-task",
