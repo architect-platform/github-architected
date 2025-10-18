@@ -70,12 +70,12 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     }
   }
 
-  private fun findGitDirectory(startDir: File): File? {
+  private fun findRepoRoot(startDir: File): File? {
     var currentDir: File? = startDir
     while (currentDir != null) {
       val gitDir = File(currentDir, ".git")
       if (gitDir.exists() && gitDir.isDirectory) {
-        return gitDir
+        return currentDir
       }
       currentDir = currentDir.parentFile
     }
@@ -91,7 +91,7 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     }
     val resourceExtractor = environment.service(ResourceExtractor::class.java)
     val gitDir =
-        findGitDirectory(projectContext.dir.toFile())
+        findRepoRoot(projectContext.dir.toFile())
             ?: return TaskResult.failure("Git directory not found in project hierarchy.")
     resourceExtractor.copyDirectoryFromResources(
         this.javaClass.classLoader,
@@ -154,7 +154,7 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
       projectContext: ProjectContext,
   ): TaskResult {
     val gitDir =
-        findGitDirectory(projectContext.dir.toFile())
+        findRepoRoot(projectContext.dir.toFile())
             ?: return TaskResult.failure("Git directory not found in project hierarchy.")
     val resourceRoot = "pipelines/"
     val resourceFile = resourceRoot + pipeline.type + ".yml"
