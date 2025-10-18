@@ -6,6 +6,7 @@ import io.github.architectplatform.api.components.execution.ResourceExtractor
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
+import io.github.architectplatform.api.core.project.getKey
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
@@ -69,6 +70,18 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     }
   }
 
+  private fun findGitDirectory(startDir: File): File? {
+    var currentDir: File? = startDir
+    while (currentDir != null) {
+      val gitDir = File(currentDir, ".git")
+      if (gitDir.exists() && gitDir.isDirectory) {
+        return gitDir
+      }
+      currentDir = currentDir.parentFile
+    }
+    return null
+  }
+
   private fun initDependencies(
       environment: Environment,
       projectContext: ProjectContext
@@ -77,10 +90,13 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
       return TaskResult.success("Dependencies initialization skipped.")
     }
     val resourceExtractor = environment.service(ResourceExtractor::class.java)
+    val gitDir =
+        findGitDirectory(projectContext.dir.toFile())
+            ?: return TaskResult.failure("Git directory not found in project hierarchy.")
     resourceExtractor.copyDirectoryFromResources(
         this.javaClass.classLoader,
         "dependencies/${context.deps.type}",
-        Path(projectContext.dir.toString(), ".github/"))
+        gitDir.resolve(".github/").toPath())
     return TaskResult.success("Dependencies initialized successfully.")
   }
 
@@ -108,6 +124,7 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     commandExecutor.execute("chmod +x update-version.sh", projectContext.dir.toString())
     resourceExtractor
         .getResourceFileContent(this.javaClass.classLoader, "releases/.releaserc.json")
+        .replace("{{name}}", projectContext.config.getKey<String>("project.name") ?: "unknown")
         .replace("{{message}}", message)
         .replace("{{assets}}", assetsJson)
         .replace("{{git_assets}}", gitAssetsjson)
@@ -136,9 +153,12 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
       environment: Environment,
       projectContext: ProjectContext,
   ): TaskResult {
+    val gitDir =
+        findGitDirectory(projectContext.dir.toFile())
+            ?: return TaskResult.failure("Git directory not found in project hierarchy.")
     val resourceRoot = "pipelines/"
     val resourceFile = resourceRoot + pipeline.type + ".yml"
-    val pipelinesDir = File(projectContext.dir.toString(), ".github/workflows")
+    val pipelinesDir = File(gitDir, ".github/workflows")
 
     if (!pipelinesDir.exists()) {
       pipelinesDir.mkdirs()
