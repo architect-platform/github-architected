@@ -5,10 +5,14 @@ name: {{name}}
 on:
   push:
     branches:
-      - main
+      - {{branch}}
+    paths:
+      - '{{path}}'
   pull_request:
     branches:
-      - main
+      - {{branch}}
+    paths:
+      - '{{path}}'
 
 env:
   REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}

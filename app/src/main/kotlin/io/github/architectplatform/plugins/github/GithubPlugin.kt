@@ -168,7 +168,11 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     resourceExtractor.getResourceFileContent(this.javaClass.classLoader, resourceFile).let { content
       ->
       val filePath = File(pipelinesDir, "${pipeline.name}.yml")
-      filePath.writeText(content.replace("{{name}}", pipeline.name))
+      filePath.writeText(
+          content
+              .replace("{{name}}", pipeline.name)
+              .replace("{{path}}", pipeline.path)
+              .replace("{{branch}}", pipeline.branch))
     }
     return TaskResult.success("Pipeline ${pipeline.name} initialized successfully.")
   }
