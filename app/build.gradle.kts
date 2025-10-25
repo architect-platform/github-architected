@@ -2,7 +2,7 @@ plugins { kotlin("jvm") version "2.2.21" }
 
 group = "io.github.architectplatform.plugins"
 
-version = "1.1.3"
+version = "1.1.4"
 
 java { sourceCompatibility = JavaVersion.toVersion("17") }
 
