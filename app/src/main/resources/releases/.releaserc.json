@@ -3,9 +3,6 @@
   "tagFormat": "{{name}}-${version}",
   "branches": ["main"],
   "pkgRoot": ".",
-  "analyzeCommits": {
-    "path": "."
-  },
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
